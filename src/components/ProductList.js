@@ -5,10 +5,10 @@ import Table from 'react-bootstrap/Table';
 import Spinner from 'react-bootstrap/Spinner';
 
 const ProductList = ({ productCategoryData, isLoading, setIsLoading }) => {
-  const [data, setData] = useState([]);
+  const [tableRows, setTableRows] = useState([]);
 
   const createList = () => {
-    const products = productCategoryData.map((product) => (
+    const rows = productCategoryData.map((product) => (
       <tr key={product.id}>
         <td style={{ textAlign: 'left' }}>{product.name}</td>
         <td>{product.color.join(', ')}</td>
@@ -17,7 +17,7 @@ const ProductList = ({ productCategoryData, isLoading, setIsLoading }) => {
         <td>{product.DATAPAYLOAD}</td>
       </tr>
     ));
-    setData(products);
+    setTableRows(rows);
     setIsLoading(false);
   };
 
@@ -25,35 +25,39 @@ const ProductList = ({ productCategoryData, isLoading, setIsLoading }) => {
     createList();
   }, [productCategoryData]);
 
+  const LoadingInfo = () => (
+    <div>
+      <Spinner
+        animation="border"
+        style={{ width: '10rem', height: '10rem' }}
+      />
+      <h4 style={{ marginTop: '1rem' }}>
+        Creating List...
+      </h4>
+    </div>
+  );
+
+  const ProductTable = () => (
+    <Table responsive size="sm">
+      <thead>
+        <tr>
+          <th style={{ textAlign: 'left' }}>Product name</th>
+          <th>Available colors</th>
+          <th>Manufacturer</th>
+          <th>Price</th>
+          <th>Availability</th>
+        </tr>
+      </thead>
+      <tbody>{tableRows}</tbody>
+    </Table>
+  );
+
   return (
     <div style={{ width: '100%' }}>
-      {isLoading ? (
-        <div>
-          <Spinner
-            animation="border"
-            style={{ width: '10rem', height: '10rem' }}
-          />
-          <h4 style={{ marginTop: '1rem' }}>
-            Creating List...
-          </h4>
-        </div>
-      )
-        : (
-          <Table responsive size="sm">
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left' }}>Product name</th>
-                <th>Available colors</th>
-                <th>Manufacturer</th>
-                <th>Price</th>
-                <th>Availability</th>
-              </tr>
-            </thead>
-            <tbody>{data}</tbody>
-          </Table>
-        )}
+      {isLoading
+        ? (<LoadingInfo />)
+        : (<ProductTable />)}
     </div>
-
   );
 };
 
