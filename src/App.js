@@ -58,38 +58,45 @@ const App = () => {
     }
   };
 
+  const NavigationBar = () => (
+    <Navbar bg="dark" variant="dark">
+      <Navbar.Brand>Bad-Api</Navbar.Brand>
+      <Nav className="mr-auto">
+        <Nav.Link onClick={handleJacketClick}>{ProductTypes.JACKETS}</Nav.Link>
+        <Nav.Link onClick={handleShirtClick}>{ProductTypes.SHIRTS}</Nav.Link>
+        <Nav.Link onClick={handleAccessoriesClick}>{ProductTypes.ACCESSORIES}</Nav.Link>
+      </Nav>
+    </Navbar>
+  );
+
+  const LoadingInfo = () => (
+    <div>
+      <Spinner
+        animation="border"
+        style={{ width: '10rem', height: '10rem' }}
+      />
+      <h4 style={{ marginTop: '1rem' }}>Finding Products...</h4>
+    </div>
+  );
+
   return (
     <div className="App">
-      <Navbar bg="dark" variant="dark">
-        <Navbar.Brand>Bad-Api</Navbar.Brand>
-        <Nav className="mr-auto">
-          <Nav.Link onClick={handleJacketClick}>{ProductTypes.JACKETS}</Nav.Link>
-          <Nav.Link onClick={handleShirtClick}>{ProductTypes.SHIRTS}</Nav.Link>
-          <Nav.Link onClick={handleAccessoriesClick}>{ProductTypes.ACCESSORIES}</Nav.Link>
-        </Nav>
-      </Navbar>
-
+      <NavigationBar />
       <Container>
         <Row className="justify-content-center" style={{ margin: '1rem' }}>
           <h1>{selectedCategory}</h1>
         </Row>
 
         <Row className="justify-content-center">
-          {isFetchingList ? (
-            <div>
-              <Spinner
-                animation="border"
-                style={{ width: '10rem', height: '10rem' }}
+          {isFetchingList
+            ? (<LoadingInfo />)
+            : (
+              <ProductList
+                productCategoryData={allProductData[selectedCategory.toLowerCase()]}
+                isLoading={isCreatingList}
+                setIsLoading={setIsCreatingList}
               />
-              <h4 style={{ marginTop: '1rem' }}>Finding Products...</h4>
-            </div>
-          ) : (
-            <ProductList
-              productCategoryData={allProductData[selectedCategory.toLowerCase()]}
-              isLoading={isCreatingList}
-              setIsLoading={setIsCreatingList}
-            />
-          )}
+            )}
         </Row>
       </Container>
     </div>
