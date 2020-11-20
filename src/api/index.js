@@ -11,23 +11,15 @@ const availabilityRequest = axios.create({
 });
 
 const handleProductRequests = (results) => {
-  let productData = [];
-  results.forEach((response) => {
-    productData = productData.concat(response.data);
-  });
+  const productData = results.map((res) => res.data).flat();
 
-  const availabilityRequests = [];
-  const manufacturers = [];
-  productData.forEach((product) => {
-    if (
-      typeof product.manufacturer !== 'undefined'
-      && !manufacturers.includes(product.manufacturer)
-    ) {
-      manufacturers.push(product.manufacturer);
-      const request = availabilityRequest.get(product.manufacturer);
-      availabilityRequests.push(request);
+  const availabilityRequests = productData.reduce((a, c) => {
+    if (!a.has(c.manufacturer)) {
+      a.set(c.manufacturer, availabilityRequest.get(c.manufacturer));
     }
-  });
+
+    return a;
+  }, new Map()).values();
 
   return [productData, availabilityRequests];
 };
@@ -58,15 +50,20 @@ const mergeLists = (mergedList, listToBeMerged) => {
   return mergedList;
 };
 
-const createCategorizedResult = (mergedResult) => {
-  const categorizedResult = {
-    jackets: [],
-    shirts: [],
-    accessories: [],
-  };
-  mergedResult.forEach((product) => {
-    categorizedResult[product.type].push(product);
-  });
+const handleAvailabilityRequest = (results, productData) => {
+  const availabilityData = results.map((res) => res.data.response).flat();
+  const mergedResult = [
+    ...[productData, availabilityData]
+      .reduce(mergeLists, new Map())
+      .values(),
+  ];
+
+  const categorizedResult = mergedResult.reduce((a, c) => {
+    const temp = a;
+    temp[c.type] = temp[c.type] || [];
+    a[c.type].push(c);
+    return a;
+  }, {});
 
   return categorizedResult;
 };
@@ -74,10 +71,7 @@ const createCategorizedResult = (mergedResult) => {
 const fetchProducts = async (callback) => {
   // create product requests for each product category.
   const productTypes = ['jackets', 'shirts', 'accessories'];
-  const productRequests = [];
-  productTypes.forEach((type) => {
-    productRequests.push(productRequest.get(type));
-  });
+  const productRequests = productTypes.map((type) => productRequest.get(type));
 
   // wait for product request results and create availability requests for each manufacturer.
   const [productData, availabilityRequests] = await Promise.all(
@@ -85,20 +79,9 @@ const fetchProducts = async (callback) => {
   ).then((results) => handleProductRequests(results));
 
   // wait for availability request results, then merge and categorize the results.
-  const result = await Promise.all(availabilityRequests).then((results) => {
-    let availabilityData = [];
-    results.forEach((response) => {
-      availabilityData = availabilityData.concat(response.data.response);
-    });
-
-    const mergedResult = [
-      ...[productData, availabilityData]
-        .reduce(mergeLists, new Map())
-        .values(),
-    ];
-
-    return createCategorizedResult(mergedResult);
-  });
+  const result = await Promise.all(
+    availabilityRequests,
+  ).then((results) => handleAvailabilityRequest(results, productData));
 
   callback(result);
 };
