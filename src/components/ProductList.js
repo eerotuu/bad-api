@@ -30,13 +30,7 @@ const ProductList = ({
   }, [productCategoryData]);
 
   const LoadingInfo = () => (
-    <div style={{
-      position: 'absolute',
-      left: '50%',
-      top: '50%',
-      transform: 'translate(-50%, -50%)',
-    }}
-    >
+    <div className="content_center_screen">
       <Spinner
         animation="border"
         style={{ width: '10rem', height: '10rem' }}

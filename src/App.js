@@ -79,13 +79,7 @@ const App = () => {
   );
 
   const LoadingInfo = () => (
-    <div style={{
-      position: 'absolute',
-      left: '50%',
-      top: '50%',
-      transform: 'translate(-50%, -50%)',
-    }}
-    >
+    <div className="content_center_screen">
       <Spinner
         animation="border"
         style={{ width: '10rem', height: '10rem' }}
@@ -94,8 +88,15 @@ const App = () => {
     </div>
   );
 
+  const ErrorInfo = () => (
+    <div className="content_center_screen">
+      <h1>Oops! Something went wrong.</h1>
+      <p>This page did not load product data correctly, please try again.</p>
+    </div>
+  );
+
   const ComponentHandler = () => {
-    if (showError) return <div>error</div>;
+    if (showError) return <ErrorInfo />;
     if (isFetchingList) return <LoadingInfo />;
     return (
       <ProductList
