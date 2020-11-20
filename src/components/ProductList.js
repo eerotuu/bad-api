@@ -1,10 +1,14 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 import Table from 'react-bootstrap/Table';
 import Spinner from 'react-bootstrap/Spinner';
+import Row from 'react-bootstrap/Row';
 
-const ProductList = ({ productCategoryData, isLoading, setIsLoading }) => {
+const ProductList = ({
+  productType, productCategoryData, isLoading, setIsLoading,
+}) => {
   const [tableRows, setTableRows] = useState([]);
 
   const createList = () => {
@@ -26,14 +30,17 @@ const ProductList = ({ productCategoryData, isLoading, setIsLoading }) => {
   }, [productCategoryData]);
 
   const LoadingInfo = () => (
-    <div>
+    <div style={{
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      transform: 'translate(-50%, -50%)',
+    }}
+    >
       <Spinner
         animation="border"
         style={{ width: '10rem', height: '10rem' }}
       />
-      <h4 style={{ marginTop: '1rem' }}>
-        Creating List...
-      </h4>
     </div>
   );
 
@@ -54,14 +61,16 @@ const ProductList = ({ productCategoryData, isLoading, setIsLoading }) => {
 
   return (
     <div style={{ width: '100%' }}>
-      {isLoading
-        ? (<LoadingInfo />)
-        : (<ProductTable />)}
+      <Row className="justify-content-center" style={{ margin: '1rem' }}>
+        <h1>{productType}</h1>
+      </Row>
+      {isLoading ? (<LoadingInfo />) : (<ProductTable />)}
     </div>
   );
 };
 
 ProductList.propTypes = {
+  productType: PropTypes.string.isRequired,
   productCategoryData: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string.isRequired,
     color: PropTypes.arrayOf(PropTypes.string).isRequired,

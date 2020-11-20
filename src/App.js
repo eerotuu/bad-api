@@ -6,7 +6,6 @@ import React, { useState, useEffect } from 'react';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
-import Row from 'react-bootstrap/Row';
 import Spinner from 'react-bootstrap/Spinner';
 import ProductList from './components/ProductList';
 import fetchProducts from './api';
@@ -80,7 +79,13 @@ const App = () => {
   );
 
   const LoadingInfo = () => (
-    <div>
+    <div style={{
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      transform: 'translate(-50%, -50%)',
+    }}
+    >
       <Spinner
         animation="border"
         style={{ width: '10rem', height: '10rem' }}
@@ -94,6 +99,7 @@ const App = () => {
     if (isFetchingList) return <LoadingInfo />;
     return (
       <ProductList
+        productType={selectedCategory}
         productCategoryData={allProductData[selectedCategory.toLowerCase()]}
         isLoading={isCreatingList}
         setIsLoading={setIsCreatingList}
@@ -105,13 +111,7 @@ const App = () => {
     <div className="App">
       <NavigationBar />
       <Container>
-        <Row className="justify-content-center" style={{ margin: '1rem' }}>
-          <h1>{selectedCategory}</h1>
-        </Row>
-
-        <Row className="justify-content-center">
-          <ComponentHandler />
-        </Row>
+        <ComponentHandler />
       </Container>
     </div>
   );
