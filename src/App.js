@@ -23,6 +23,7 @@ const App = () => {
   const [isFetchingList, setIsFetchingList] = useState(true);
   const [isCreatingList, setIsCreatingList] = useState(true);
   const [allProductData, setAllProductData] = useState([]);
+  const [showError, setShowError] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(ProductTypes.DEFAULT);
 
   const handleFetchCallback = (result) => {
@@ -30,10 +31,19 @@ const App = () => {
     setIsFetchingList(false);
   };
 
+  const handleFetchError = () => {
+    setShowError(true);
+    setIsFetchingList(false);
+  };
+
+  const request = () => fetchProducts()
+    .then((result) => handleFetchCallback(result))
+    .catch(() => handleFetchError());
+
   useEffect(() => {
-    fetchProducts(handleFetchCallback);
+    request();
     setInterval(() => {
-      fetchProducts(handleFetchCallback);
+      request();
     }, fetchTimeInterval);
   }, []);
 
@@ -79,6 +89,18 @@ const App = () => {
     </div>
   );
 
+  const ComponentHandler = () => {
+    if (showError) return <div>error</div>;
+    if (isFetchingList) return <LoadingInfo />;
+    return (
+      <ProductList
+        productCategoryData={allProductData[selectedCategory.toLowerCase()]}
+        isLoading={isCreatingList}
+        setIsLoading={setIsCreatingList}
+      />
+    );
+  };
+
   return (
     <div className="App">
       <NavigationBar />
@@ -88,15 +110,7 @@ const App = () => {
         </Row>
 
         <Row className="justify-content-center">
-          {isFetchingList
-            ? (<LoadingInfo />)
-            : (
-              <ProductList
-                productCategoryData={allProductData[selectedCategory.toLowerCase()]}
-                isLoading={isCreatingList}
-                setIsLoading={setIsCreatingList}
-              />
-            )}
+          <ComponentHandler />
         </Row>
       </Container>
     </div>

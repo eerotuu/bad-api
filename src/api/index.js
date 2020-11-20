@@ -2,12 +2,12 @@ import axios from 'axios';
 
 const productRequest = axios.create({
   baseURL: 'https://bad-api-assignment.reaktor.com/products/',
-  headers: { Accept: 'application/json' },
+  headers: { Accept: 'application/json'/* , 'x-force-error-mode': 'all' */ },
 });
 
 const availabilityRequest = axios.create({
   baseURL: 'https://bad-api-assignment.reaktor.com/availability/',
-  headers: { Accept: 'application/json' },
+  headers: { Accept: 'application/json'/* , 'x-force-error-mode': 'all' */ },
 });
 
 const handleProductRequests = (results) => {
@@ -28,22 +28,19 @@ const handleProductRequests = (results) => {
 const mergeLists = (mergedList, listToBeMerged) => {
   listToBeMerged.forEach((product) => {
     const object = product;
-    if (typeof object.id !== 'undefined') {
-      const id = object.id.toLowerCase();
+    const id = object.id.toLowerCase();
 
-      if (mergedList.has(id)) {
-        if (typeof object.DATAPAYLOAD !== 'undefined') {
-          // clear tags, line breaks and whitespaces.
-          const regex = /<[^>]*>|\\n| /g;
-          object.DATAPAYLOAD = object.DATAPAYLOAD.replace(regex, '');
-        }
-
-        const targetObject = mergedList.get(id);
-        mergedList.set(id, Object.assign(targetObject, object));
-      } else if (typeof object.type !== 'undefined') {
-        object.DATAPAYLOAD = 'UNKNOWN';
-        mergedList.set(id, object);
+    if (mergedList.has(id)) {
+      if (typeof object.type === 'undefined') {
+        // clear tags, line breaks and whitespaces.
+        const regex = /<[^>]*>|\\n| /g;
+        object.DATAPAYLOAD = object.DATAPAYLOAD.replace(regex, '');
       }
+
+      const targetObject = mergedList.get(id);
+      mergedList.set(id, Object.assign(targetObject, object));
+    } else {
+      mergedList.set(id, object);
     }
   });
 
@@ -68,7 +65,7 @@ const handleAvailabilityRequest = (results, productData) => {
   return categorizedResult;
 };
 
-const fetchProducts = async (callback) => {
+const fetchProducts = async () => {
   // create product requests for each product category.
   const productTypes = ['jackets', 'shirts', 'accessories'];
   const productRequests = productTypes.map((type) => productRequest.get(type));
@@ -83,7 +80,7 @@ const fetchProducts = async (callback) => {
     availabilityRequests,
   ).then((results) => handleAvailabilityRequest(results, productData));
 
-  callback(result);
+  return result;
 };
 
 export default fetchProducts;
