@@ -22,7 +22,7 @@ const transformResults = ([products, availability]) => {
   const cleanedAvailData = cleanAvailabilityData(availability, /<[^>]*>|\\n| /g);
   return [...[products, cleanedAvailData]
     .reduce(combineObjLists, new Map()).values()]
-    .filter((res) => typeof (res.type) !== 'undefined')
+    .filter((product) => typeof (product.type) !== 'undefined')
     .reduce(categorize, {});
 };
 
