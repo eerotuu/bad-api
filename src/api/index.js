@@ -10,27 +10,27 @@ const availabilityRequest = axios.create({
   headers: { Accept: 'application/json'/* , 'x-force-error-mode': 'all' */ },
 });
 
-const mergeLists = (mergedList, listToBeMerged) => {
-  listToBeMerged.forEach((product) => {
-    const object = product;
-    const id = object.id.toLowerCase();
+const getTypes = (types) => Promise.all(types.map((type) => productRequest.get(type)));
 
-    if (mergedList.has(id)) {
-      if (typeof object.type === 'undefined') {
-        // clear tags, line breaks and whitespaces.
-        const regex = /<[^>]*>|\\n| /g;
-        object.DATAPAYLOAD = object.DATAPAYLOAD.replace(regex, '');
-      }
+const cleanAvailabilityData = (avail, regex) => avail.map((a) => {
+  const temp = a;
+  temp.id = a.id.toLowerCase();
+  temp.DATAPAYLOAD = a.DATAPAYLOAD.replace(regex, '');
+  return temp;
+});
 
-      const targetObject = mergedList.get(id);
-      mergedList.set(id, Object.assign(targetObject, object));
-    } else {
-      mergedList.set(id, object);
-    }
-  });
+const combineObjects = (combined, current) => {
+  const { id } = current;
+  if (combined.has(id)) {
+    combined.set(id, Object.assign(combined.get(id), current));
+  } else {
+    combined.set(id, current);
+  }
 
-  return mergedList;
+  return combined;
 };
+
+const combineObjLists = (combined, currentList) => currentList.reduce(combineObjects, combined);
 
 const categorize = (a, c) => {
   const temp = a;
@@ -38,8 +38,6 @@ const categorize = (a, c) => {
   temp[c.type].push(c);
   return temp;
 };
-
-const getTypes = (types) => Promise.all(types.map((type) => productRequest.get(type)));
 
 const fetchProducts = async (types) => getTypes(types)
   .then((res) => res.map((r) => r.data).flat())
@@ -60,7 +58,10 @@ const fetchProducts = async (types) => getTypes(types)
     .then((res) => [products, res.map((r) => r.data.response).flat()]))
 
   // merge results
-  .then(([products, results]) => [...[products, results].reduce(mergeLists, new Map()).values()])
+  .then(([products, results]) => {
+    const cleanedAvailData = cleanAvailabilityData(results, /<[^>]*>|\\n| /g);
+    return [...[products, cleanedAvailData].reduce(combineObjLists, new Map()).values()];
+  })
 
   // filter availability data that is not needed
   .then((mergedResult) => mergedResult.filter((res) => typeof (res.type) !== 'undefined'))
