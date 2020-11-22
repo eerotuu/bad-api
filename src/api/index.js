@@ -10,21 +10,6 @@ const availabilityRequest = axios.create({
   headers: { Accept: 'application/json'/* , 'x-force-error-mode': 'all' */ },
 });
 
-const handleProductRequests = (results) => {
-  const productData = results.map((res) => res.data).flat();
-
-  const availabilityRequests = productData.reduce((a, c) => {
-    if (!a.has(c.manufacturer)) {
-      a.set(c.manufacturer, availabilityRequest.get(c.manufacturer));
-    }
-
-    return a;
-  }, new Map()).values();
-
-  return [productData, availabilityRequests];
-};
-
-// merge product and availability data. when using reduce, give products array as first value.
 const mergeLists = (mergedList, listToBeMerged) => {
   listToBeMerged.forEach((product) => {
     const object = product;
@@ -47,40 +32,48 @@ const mergeLists = (mergedList, listToBeMerged) => {
   return mergedList;
 };
 
-const handleAvailabilityRequest = (results, productData) => {
-  const availabilityData = results.map((res) => res.data.response).flat();
-  const mergedResult = [
-    ...[productData, availabilityData]
-      .reduce(mergeLists, new Map())
-      .values(),
-  ];
-
-  const categorizedResult = mergedResult.reduce((a, c) => {
-    const temp = a;
-    temp[c.type] = temp[c.type] || [];
-    a[c.type].push(c);
-    return a;
-  }, {});
-
-  return categorizedResult;
+const categorize = (a, c) => {
+  const temp = a;
+  temp[c.type] = temp[c.type] || [];
+  temp[c.type].push(c);
+  return temp;
 };
 
-const fetchProducts = async () => {
-  // create product requests for each product category.
-  const productTypes = ['jackets', 'shirts', 'accessories'];
-  const productRequests = productTypes.map((type) => productRequest.get(type));
+const getTypes = (types) => Promise.all(types.map((type) => productRequest.get(type)));
 
-  // wait for product request results and create availability requests for each manufacturer.
-  const [productData, availabilityRequests] = await Promise.all(
-    productRequests,
-  ).then((results) => handleProductRequests(results));
+const fetchProducts = async (types) => getTypes(types)
+  .then((res) => res.map((r) => r.data).flat())
 
-  // wait for availability request results, then merge and categorize the results.
-  const result = await Promise.all(
-    availabilityRequests,
-  ).then((results) => handleAvailabilityRequest(results, productData));
+  // create availability requests for all manufacturers
+  .then((products) => {
+    const availReqs = products.reduce((a, c) => {
+      if (!a.has(c.manufacturer)) {
+        a.set(c.manufacturer, availabilityRequest.get(c.manufacturer));
+      }
+      return a;
+    }, new Map()).values();
+    return [products, availReqs];
+  })
 
-  return result;
-};
+  // get availability results
+  .then(([products, availReqs]) => Promise.all(availReqs)
+    .then((res) => [products, res.map((r) => r.data.response).flat()]))
+
+  // merge results
+  .then(([products, results]) => [...[products, results].reduce(mergeLists, new Map()).values()])
+
+  // filter availability data that is not needed
+  .then((mergedResult) => mergedResult.filter((res) => typeof (res.type) !== 'undefined'))
+
+  // categorize result into product types
+  .then((filteredResult) => filteredResult.reduce(categorize, {}))
+
+  // check that result is not empty
+  .then((result) => {
+    if (Object.entries(result) === 0) {
+      throw new Error('empty result');
+    }
+    return result;
+  });
 
 export default fetchProducts;

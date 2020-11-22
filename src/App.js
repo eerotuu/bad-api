@@ -26,18 +26,21 @@ const App = () => {
   const [selectedCategory, setSelectedCategory] = useState(ProductTypes.DEFAULT);
 
   const handleFetchCallback = (result) => {
+    // console.log(result);
     setAllProductData(result);
     setIsFetchingList(false);
   };
 
-  const handleFetchError = () => {
+  // eslint-disable-next-line no-unused-vars
+  const handleFetchError = (err) => {
+    // console.log(err);
     setShowError(true);
     setIsFetchingList(false);
   };
 
-  const request = () => fetchProducts()
+  const request = () => fetchProducts(['jackets', 'shirts', 'accessories'])
     .then((result) => handleFetchCallback(result))
-    .catch(() => handleFetchError());
+    .catch((err) => handleFetchError(err));
 
   useEffect(() => {
     request();
@@ -88,12 +91,16 @@ const App = () => {
     </div>
   );
 
-  const ErrorInfo = () => (
-    <div className="content_center_screen">
-      <h1>Oops! Something went wrong.</h1>
-      <p>This page did not load product data correctly, please try again.</p>
-    </div>
-  );
+  const ErrorInfo = () => {
+    const info = "This page didn't load product data correctly, please try again.";
+    return (
+      <div className="content_center_screen">
+        <h1>Oops! Something went wrong.</h1>
+        <p>{info}</p>
+        <p>The API has a built-in intentional failure case which might be causing these.</p>
+      </div>
+    );
+  };
 
   const ComponentHandler = () => {
     if (showError) return <ErrorInfo />;
