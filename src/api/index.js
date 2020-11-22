@@ -6,16 +6,16 @@ const getTypes = (types) => Promise.all(types.map((type) => productRequest.get(t
 const getProductData = (results) => results.map((r) => r.data).flat();
 
 const createAvailabilityRequests = (products) => {
-  const availReqs = products.reduce((a, c) => {
-    if (!a.has(c.manufacturer)) {
-      a.set(c.manufacturer, availabilityRequest.get(c.manufacturer));
+  const availReqs = products.reduce((requests, current) => {
+    if (!requests.has(current.manufacturer)) {
+      requests.set(current.manufacturer, availabilityRequest.get(current.manufacturer));
     }
-    return a;
+    return requests;
   }, new Map()).values();
-  return [products, availReqs];
+  return { products, availReqs };
 };
 
-const getAvailabilityData = ([products, availReqs]) => Promise.all(availReqs)
+const getAvailabilityData = ({ products, availReqs }) => Promise.all(availReqs)
   .then((res) => [products, res.map((r) => r.data.response).flat()]);
 
 const transformResults = ([products, availability]) => {
