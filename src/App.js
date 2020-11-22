@@ -25,22 +25,22 @@ const App = () => {
   const [showError, setShowError] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(ProductTypes.DEFAULT);
 
-  const handleFetchCallback = (result) => {
+  const handleFetchResults = (result) => {
     // console.log(result);
     setAllProductData(result);
     setIsFetchingList(false);
   };
 
   // eslint-disable-next-line no-unused-vars
-  const handleFetchError = (err) => {
+  const handleFetchErrors = (err) => {
     // console.log(err);
     setShowError(true);
     setIsFetchingList(false);
   };
 
   const request = () => fetchProducts(['jackets', 'shirts', 'accessories'])
-    .then((result) => handleFetchCallback(result))
-    .catch((err) => handleFetchError(err));
+    .then(handleFetchResults)
+    .catch(handleFetchErrors);
 
   useEffect(() => {
     request();
