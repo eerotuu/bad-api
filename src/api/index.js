@@ -1,24 +1,25 @@
 import { productRequest, availabilityRequest } from './requests';
 import { cleanAvailabilityData, combineObjLists, categorize } from './api-functions';
 
-const getTypes = (types) => Promise.all(types.map((type) => productRequest.get(type)));
+const getProducts = async (categories) => {
+  const response = await Promise.all(categories.map((type) => productRequest.get(type)));
+  return response.map((r) => r.data).flat();
+};
 
-const getProductData = (results) => results.map((r) => r.data).flat();
-
-const createAvailabilityRequests = (products) => {
+const getAvailability = async (products) => {
   const availReqs = products.reduce((requests, current) => {
     if (!requests.has(current.manufacturer)) {
       requests.set(current.manufacturer, availabilityRequest.get(current.manufacturer));
     }
     return requests;
   }, new Map()).values();
-  return { products, availReqs };
+
+  const response = await Promise.all(availReqs);
+  const availability = response.map((r) => r.data.response).flat();
+  return { products, availability };
 };
 
-const getAvailabilityData = ({ products, availReqs }) => Promise.all(availReqs)
-  .then((res) => [products, res.map((r) => r.data.response).flat()]);
-
-const transformResults = ([products, availability]) => {
+const transformResults = ({ products, availability }) => {
   const cleanedAvailData = cleanAvailabilityData(availability, /<[^>]*>|\\n| /g);
   return [...[products, cleanedAvailData]
     .reduce(combineObjLists, new Map()).values()]
@@ -33,11 +34,11 @@ const validateResult = (result) => {
   return result;
 };
 
-const fetchProducts = (types) => getTypes(types)
-  .then(getProductData)
-  .then(createAvailabilityRequests)
-  .then(getAvailabilityData)
-  .then(transformResults)
-  .then(validateResult);
+const fetchProducts = async (categories) => getProducts(categories)
+  .then(getAvailability)
+  .then(
+    transformResults,
+    validateResult,
+  );
 
 export default fetchProducts;
