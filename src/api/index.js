@@ -33,7 +33,7 @@ const validateResult = (result) => {
   return result;
 };
 
-const fetchProducts = async (types) => getTypes(types)
+const fetchProducts = (types) => getTypes(types)
   .then(getProductData)
   .then(createAvailabilityRequests)
   .then(getAvailabilityData)
