@@ -1,9 +1,17 @@
 import { productRequest, availabilityRequest } from './requests';
-import { cleanAvailabilityData, combineObjLists, categorize } from './api-functions';
+import {
+  cleanAvailabilityData,
+  categorize,
+  validateArray,
+  combineObjectArrays,
+} from './helper-functions';
 
 const getProducts = async (categories) => {
   const response = await Promise.all(categories.map((type) => productRequest.get(type)));
-  return response.map((r) => r.data).flat();
+  return response.map((r) => validateArray(
+    r.data,
+    'The server returned an empty product data.',
+  )).flat();
 };
 
 const getAvailability = async (products) => {
@@ -15,30 +23,26 @@ const getAvailability = async (products) => {
   }, new Map()).values();
 
   const response = await Promise.all(availReqs);
-  const availability = response.map((r) => r.data.response).flat();
+  const availability = response.map((r) => validateArray(
+    r.data.response,
+    'The server returned an empty availability data.',
+  )).flat();
   return { products, availability };
 };
 
 const transformResults = ({ products, availability }) => {
-  const cleanedAvailData = cleanAvailabilityData(availability, /<[^>]*>|\\n| /g);
-  return [...[products, cleanedAvailData]
-    .reduce(combineObjLists, new Map()).values()]
-    .filter((product) => typeof (product.type) !== 'undefined')
+  const cleanedAvailData = cleanAvailabilityData(
+    availability,
+    /<INSTOCKVALUE>(.*?)<\/INSTOCKVALUE>/,
+  );
+
+  return combineObjectArrays(products, cleanedAvailData)
+    .filter((product) => typeof (product.type) !== 'undefined') // remove unused availability data.
     .reduce(categorize, {});
 };
 
-const validateResult = (result) => {
-  if (Object.entries(result) === 0) {
-    throw new Error('empty result');
-  }
-  return result;
-};
-
-const fetchProducts = async (categories) => getProducts(categories)
+const fetchProductData = async (categories) => getProducts(categories)
   .then(getAvailability)
-  .then(
-    transformResults,
-    validateResult,
-  );
+  .then(transformResults);
 
-export default fetchProducts;
+export default fetchProductData;

@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
@@ -35,6 +34,7 @@ const ProductList = ({
         animation="border"
         style={{ width: '10rem', height: '10rem' }}
       />
+      <h4 style={{ marginTop: '1rem' }}>Creating List...</h4>
     </div>
   );
 
@@ -58,7 +58,7 @@ const ProductList = ({
       <Row className="justify-content-center" style={{ margin: '1rem' }}>
         <h1>{productType}</h1>
       </Row>
-      {isLoading ? (<LoadingInfo />) : (<ProductTable />)}
+      {(isLoading || !tableRows.length) ? (<LoadingInfo />) : (<ProductTable />)}
     </div>
   );
 };
