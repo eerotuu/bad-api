@@ -108,10 +108,6 @@ const App = () => {
       <p>
         The API has a built-in intentional failure casewhich might be causing these.
       </p>
-      <p>
-        If the message shows Network Error, disable CORS policy on browser since the server
-        does not have cross-origin header set yet.
-      </p>
       <Button variant="primary" onClick={reload}>Try Again</Button>
     </div>
   );
